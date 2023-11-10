@@ -1,61 +1,48 @@
 function love.load()
-    love.window.setMode(1280,720)
+    love.window.setMode(500,500)
     width,height,flags=love.window.getMode()
+
     --math vars
     huge=math.huge
     pi=math.pi
     --graphics vars
-    resolution={width=640,height=360}
+    love.graphics.setDefaultFilter('nearest','nearest') 
+    sWidth,sHeight=1920,1080
+    color={0,0,0}
 
     --game vars
-    test={}
+    time=0
+    test=false
 end
 
 function love.update(dt)
+    time=time+dt
 end
 
 function love.draw()
 end
 
+function love.mousemoved(x,y,dx,dy)
+end
+
 --graphics functions
 graphics=love.graphics
-function pixel(x,y)
-    graphics.rectangle('fill',x*width/resolution.width,y*height/resolution.height,width/resolution.width,height/resolution.height)
+function setColor(r,g,b)
+    graphics.setColor(r/255,g/255,b/255)
 end
-function square(x,y,size)
-    for fy=0,size,1 do
-        for fx=0,size,1 do
-            graphics.rectangle('fill',(fx+x)*width/resolution.width,(fy+y)*height/resolution.height,width/resolution.width,height/resolution.height)
-        end
+function pixel(x,y)
+    if x<=sWidth-1 and x>=1 and y<=sHeight and y>=1 then
+        graphics.rectangle('fill',round(x*(width/sWidth)),round(y*(height/sHeight)),(width/sWidth),(height/sHeight))
     end
 end
 function rectangle(x,y,sizex,sizey)
-    for fy=0,sizey,1 do
-        for fx=0,sizex,1 do
-            graphics.rectangle('fill',(fx+x)*width/resolution.width,(fy+y)*height/resolution.height,width/resolution.width,height/resolution.height)
-        end
-    end
+    graphics.rectangle('fill',x*(width/sWidth),y*(height/sHeight),sizex*(width/sWidth),sizey*(height/sHeight))
 end
 function line(x1,y1,x2,y2)
-    dyb=y2-y1
-    dx=x2-x1
-    if dx==0 then
-        dx=1
-    end
-    xs=x1
-    for x=x1,x2,1 do
-        y=dyb*(x-xs+0.5)/dx+y1
-        graphics.rectangle('fill',x*width/resolution.width,y*height/resolution.height,width/resolution.width,height/resolution.height)
-    end
+    graphics.line(x1*(width/sWidth),y1*(height/sHeight),x2*(width/sWidth),y2*(height/sHeight))
 end
-function circle(x,y,radius)
-    for fy=0,radius*2,1 do
-        for fx=0,radius*2,1 do
-            if distance(x+radius,y+radius,fx,fy)<radius then
-                graphics.rectangle('fill',(fx+x-1)*width/resolution.width,(fy+y-1)*height/resolution.height,width/resolution.width,height/resolution.height)
-            end
-        end
-    end
+function polygon(x1,y1,x2,y2,x3,y3,x4,y4)
+    love.graphics.polygon('fill',x1*(width/sWidth),y1*(height/sHeight),x2*(width/sWidth),y2*(height/sHeight),x3*(width/sWidth),y3*(height/sHeight),x4*(width/sWidth),y4*(height/sHeight))
 end
 
 
@@ -74,6 +61,9 @@ function toDeg(n)
 end
 function distance(x1,y1,x2,y2)
     return math.sqrt((x1-x2)^2+(y1-y2)^2)
+end
+function distance3D(x1,y1,z1,x2,y2,z2)
+    return math.sqrt((x1-x2)^2+(y1-y2)^2+(z1-z2)^2)
 end
 function floor(n)
     return math.floor(n)
@@ -102,3 +92,37 @@ end
 function tan(n)
     return math.tan(n)
 end
+function findIntersection(x1,y1,x2,y2,x3,y3,x4,y4)
+    return ((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)),((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4))
+end
+function findAngle(x1,y1,x2,y2)
+    if y2>y1 then
+        return toDeg(math.atan((y1-y2)/(x1-x2)))
+    else
+        return toDeg(math.atan((y1-y2)/(x1-x2)))+180
+    end
+end
+
+--misc
+function getMouse()
+    local x,y=love.mouse.getPosition()
+    x=x/(width/sWidth)
+    y=y/(height/sHeight)
+    return x,y
+end
+function createImageAray(image)
+    local imageData=love.image.newImageData(image)
+    local map={}
+    local w,h=imageData:getDimensions()
+
+    for y=1,h do
+        map[y]={}
+        for x=1,w do
+            local r,g,b,a=imageData:getPixel(x-1, y-1)
+            map[y][x]={r,g,b,a}
+        end
+    end
+    return map
+end
+
+--game functions
